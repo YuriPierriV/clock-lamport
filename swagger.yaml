@@ -1,0 +1,145 @@
+openapi: 3.1.0
+info:
+  title: Logical Clock API
+  description: API para simular relógios lógicos de Lamport em um sistema distribuído.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api/v1
+
+paths:
+  /process:
+    post:
+      tags:
+        - process
+      summary: Adicionar um novo processo
+      description: Adiciona um novo processo ao sistema com um relógio lógico inicializado em 0.
+      requestBody:
+        description: Criar um novo processo
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nome do processo
+                  example: Process A
+      responses:
+        '201':
+          description: Processo criado com sucesso
+        '400':
+          description: Entrada inválida
+
+    get:
+      tags:
+        - process
+      summary: Listar todos os processos
+      description: Retorna uma lista de todos os processos distribuídos e seus relógios lógicos.
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    logical_clock:
+                      type: integer
+
+  /process/{id}/event:
+    post:
+      tags:
+        - event
+      summary: Criar um evento local no processo
+      description: Incrementa o relógio lógico de um processo, simulando um evento local.
+      parameters:
+        - name: id
+          in: path
+          description: ID do processo
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Evento registrado com sucesso
+        '404':
+          description: Processo não encontrado
+
+  /process/{id}/message:
+    post:
+      tags:
+        - message
+      summary: Enviar mensagem de um processo para outro
+      description: Simula o envio de uma mensagem de um processo para outro, atualizando os relógios de acordo com o algoritmo de Lamport.
+      parameters:
+        - name: id
+          in: path
+          description: ID do processo remetente
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: Mensagem com destino
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destination_id:
+                  type: integer
+                  description: ID do processo destinatário
+                message:
+                  type: string
+                  description: Mensagem enviada
+      responses:
+        '200':
+          description: Mensagem enviada com sucesso
+        '404':
+          description: Processo não encontrado
+
+components:
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
+  schemas:
+    Process:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        logical_clock:
+          type: integer
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+        process_id:
+          type: integer
+        logical_clock:
+          type: integer
+        description:
+          type: string
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+        source_id:
+          type: integer
+        destination_id:
+          type: integer
+        logical_clock:
+          type: integer
+        message:
+          type: string
