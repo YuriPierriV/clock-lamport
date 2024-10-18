@@ -6,7 +6,7 @@ const Index = () => {
 
   return (
 
-    <h1>Aqui é com tu Ed</h1>
+    <button type="button" class="btn">Base class</button>
   );
 
 };
