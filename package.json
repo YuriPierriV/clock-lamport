@@ -1,7 +1,7 @@
 {
-  "name": "racemap",
+  "name": "clock-lamport",
   "version": "1.0.0",
-  "description": "Projeto da faculdade: Mapa em tempo real de uma corrida",
+  "description": "Projeto da faculdade: clock-lamport",
   "main": "index.js",
   "scripts": {
     "dev": "npm run services:up && next dev",
