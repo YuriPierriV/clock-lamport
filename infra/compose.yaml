@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  backend:
+    build:
+      context: ../backend # Define o diretório de contexto correto
+    network_mode: "host"
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../backend:/backend
+    depends_on:
+      - mysql
+    environment:
+      - FLASK_ENV=development
+
+  mysql:
+    image: mysql:latest # Especifica a última versão da imagem do MySQL
+    container_name: mysql-lamport
+    environment:
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_DATABASE: lamport
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      TZ: "America/Sao_Paulo"
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./dados-mysql:/var/lib/mysql
