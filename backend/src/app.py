@@ -66,7 +66,7 @@ def send_message(process_id):
         abort(404, description="Processo remetente não encontrado.")
 
     data = request.get_json()
-    destination_id = data.get('destination_id')
+    destination_id = int(data.get('destination_id'))
     message_content = data.get('message')
 
     if destination_id is None or message_content is None:
