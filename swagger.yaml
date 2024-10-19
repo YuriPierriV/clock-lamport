@@ -15,6 +15,7 @@ paths:
       description: Adiciona um novo processo ao sistema com um relógio lógico inicializado em 0.
       requestBody:
         description: Criar um novo processo
+        required: true
         content:
           application/json:
             schema:
@@ -27,6 +28,10 @@ paths:
       responses:
         '201':
           description: Processo criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Process'
         '400':
           description: Entrada inválida
 
@@ -43,14 +48,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    name:
-                      type: string
-                    logical_clock:
-                      type: integer
+                  $ref: '#/components/schemas/Process'
 
   /process/{id}/event:
     post:
@@ -66,8 +64,12 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        '201':
           description: Evento registrado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
         '404':
           description: Processo não encontrado
 
@@ -86,6 +88,7 @@ paths:
             type: integer
       requestBody:
         description: Mensagem com destino
+        required: true
         content:
           application/json:
             schema:
@@ -98,17 +101,50 @@ paths:
                   type: string
                   description: Mensagem enviada
       responses:
-        '200':
+        '201':
           description: Mensagem enviada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
         '404':
           description: Processo não encontrado
+        '400':
+          description: Entrada inválida
+
+  /events:
+    get:
+      tags:
+        - event
+      summary: Listar todos os eventos
+      description: Retorna uma lista de todos os eventos registrados.
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+
+  /messages:
+    get:
+      tags:
+        - message
+      summary: Listar todas as mensagens
+      description: Retorna uma lista de todas as mensagens enviadas entre processos.
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
 
 components:
-  securitySchemes:
-    api_key:
-      type: apiKey
-      name: api_key
-      in: header
   schemas:
     Process:
       type: object
