@@ -1,7 +1,7 @@
 .alert-position {
-  position: absolute;
+  position: fixed;
   top: 20px;
-  left: 50px;
-  z-index: 1050;
+  right: 50px;
+  z-index: 500;
   transition: opacity 0.3s ease;
 }
