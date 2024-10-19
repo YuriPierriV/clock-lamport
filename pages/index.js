@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { XYPlot, MarkSeries, XAxis, YAxis, VerticalGridLines, HorizontalGridLines, Crosshair } from 'react-vis';
+import 'react-vis/dist/style.css'; // Importe os estilos
 import axios from 'axios';
 
 function App() {
@@ -9,16 +11,34 @@ function App() {
   const [messageContent, setMessageContent] = useState('');
   const [alert, setAlert] = useState({ message: '', type: '' });
 
+  const [events, setEvents] = useState([]);
+  const [crosshair, setCrosshair] = useState({});
+
   useEffect(() => {
     fetchProcesses();
   }, []);
+
+  useEffect(() => {
+
+
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/v1/events');
+      setEvents(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar eventos:', error);
+    }
+  };
 
   // Função para exibir alertas
   const showAlert = (message, type) => {
     setAlert({ message, type });
     setTimeout(() => {
       setAlert({ message: '', type: '' }); // Limpa a mensagem após 3 segundos
-    }, 10000);
+    }, 1000);
   };
 
   const fetchProcesses = async () => {
@@ -50,6 +70,7 @@ function App() {
       const response = await axios.post(`http://localhost:5000/api/v1/process/${processId}/event`);
       showAlert(`Evento criado: ${response.data.description}`, 'success');
       fetchProcesses();
+      fetchEvents();
     } catch (error) {
       showAlert('Erro ao criar evento!', 'danger');
     }
@@ -67,10 +88,26 @@ function App() {
       });
       showAlert(`Mensagem enviada: ${response.data.message}`, 'success');
       fetchProcesses();
+      fetchEvents();
     } catch (error) {
       showAlert('Erro ao enviar mensagem!', 'danger');
     }
   };
+
+  // Transformar eventos em dados para o gráfico
+  const data = events.map(event => ({
+    x: event.logical_clock,
+    y: event.process_id,
+    description: event.description
+  }));
+
+  const maxProcessId = events.length > 0 ? Math.max(...events.map(event => event.process_id)) : 0;
+
+  // Obter IDs únicos de processos que têm eventos
+  const uniqueProcessIds = [...new Set(data.map(event => event.y))].sort((a, b) => a - b);
+
+  // Obter valores únicos de relogios lógicos que têm eventos
+  const uniqueLogicalClocks = [...new Set(data.map(event => event.x))].sort((a, b) => a - b);
 
   return (
     <main className='container mt-5' >
@@ -164,7 +201,7 @@ function App() {
         <div className='col-md-6'>
           <div className="card shadow-sm">
             <div className="card-body">
-              <h3 className="card-title text-center mb-4">Lista de Processos</h3>
+
               <table className='table table-hover'>
                 <thead className="table-dark">
                   <tr>
@@ -204,6 +241,53 @@ function App() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+          <div className="card shadow-sm">
+            <div className="card-body">
+
+              <XYPlot
+                width={600}
+                height={400}
+                onMouseLeave={() => setCrosshair({})}
+                yDomain={[0, maxProcessId + 1]} // Define o limite do eixo Y como o maior ID + 1
+                xDomain={[0, Math.max(...events.map(event => event.logical_clock), 0) + 1]} // Define o limite do eixo X
+              >
+                <VerticalGridLines />
+                <HorizontalGridLines />
+                <XAxis
+                  title="Relógio Lógico"
+                  tickValues={uniqueLogicalClocks} // Define os ticks do eixo X apenas para os relógios lógicos únicos
+                />
+                <YAxis
+                  title="ID do Processo"
+                  tickValues={uniqueProcessIds} // Define os ticks do eixo Y apenas para os IDs únicos dos processos
+                />
+                <MarkSeries
+                  data={data} // Usando MarkSeries para mostrar pontos discretos
+                  onNearestX={value => setCrosshair({ x: value.x, y: value.y })}
+                />
+                <Crosshair values={[crosshair]}>
+                  <div
+                    className='container bg-light border rounded p-2 text-dark w-100'
+                    style={{
+                      width: '200px', // Largura fixa
+                      whiteSpace: 'nowrap', // Impede quebras de linha
+                      overflow: 'hidden', // Esconde texto que ultrapassa a largura
+                      textOverflow: 'ellipsis' // Adiciona '...' no final se o texto for muito longo
+                    }}
+                  >
+                    {crosshair.x !== undefined && (
+                      <div>
+                        <p>ID do Processo: {crosshair.y}</p>
+                        <p>
+                          Descrição: {data.find(d => d.x === crosshair.x && d.y === crosshair.y)?.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </Crosshair>
+              </XYPlot>
             </div>
           </div>
         </div>
